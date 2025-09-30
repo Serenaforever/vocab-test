@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>托福环境科学词汇测试</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#8B5CF6',
+                        danger: '#EF4444',
+                        neutral: '#64748B',
+                        light: '#F1F5F9',
+                        dark: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .card-shadow {
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+            .card-flip {
+                transform-style: preserve-3d;
+                transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .card-flip-active {
+                transform: rotateY(180deg);
+            }
+            .card-front, .card-back {
+                backface-visibility: hidden;
+            }
+            .card-back {
+                transform: rotateY(180deg);
+            }
+            .progress-animation {
+                transition: width 0.5s ease-in-out;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-light to-blue-50 min-h-screen font-sans text-dark">
+    <!-- 顶部导航 -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-leaf text-secondary text-2xl"></i>
+                <h1 class="text-xl md:text-2xl font-bold text-primary">托福环境科学词汇测试</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="mode-toggle" class="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-light hover:bg-gray-200 transition-colors">
+                    <i class="fa fa-book text-neutral"></i>
+                    <span class="text-sm">学习模式</span>
+                </button>
+                <button id="restart-btn" class="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    <i class="fa fa-refresh"></i>
+                    <span class="text-sm">重新开始</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <!-- 进度条 -->
+        <div class="mb-8 bg-white rounded-full h-2.5 shadow-sm overflow-hidden">
+            <div id="progress-bar" class="bg-secondary h-full w-0 progress-animation"></div>
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-8 items-center">
+            <!-- 信息面板 -->
+            <div class="w-full md:w-1/4 space-y-6">
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-3 flex items-center">
+                        <i class="fa fa-info-circle text-primary mr-2"></i>测试信息
+                    </h2>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-neutral">总词汇量:</span>
+                            <span class="font-medium">100个</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">当前测试:</span>
+                            <span id="current-test" class="font-medium">10个单词</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">已完成:</span>
+                            <span id="completed-count" class="font-medium">0/10</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">正确率:</span>
+                            <span id="accuracy-rate" class="font-medium">0%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-5 shadow-sm">
+                    <h2 class="text-lg font-semibold mb-3 flex items-center">
+                        <i class="fa fa-lightbulb-o text-accent mr-2"></i>使用提示
+                    </h2>
+                    <ul class="text-sm space-y-2 text-neutral">
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-secondary mt-1 mr-2"></i>
+                            <span>点击卡片查看单词或释义</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-secondary mt-1 mr-2"></i>
+                            <span>选择答案后自动进入下一题</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-secondary mt-1 mr-2"></i>
+                            <span>学习模式可浏览全部词汇</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fa fa-check-circle text-secondary mt-1 mr-2"></i>
+                            <span>完成后可查看测试结果</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 卡片区域 -->
+            <div class="w-full md:w-2/4">
+                <div id="card-container" class="relative h-[400px] md:h-[450px] perspective-1000">
+                    <!-- 单词卡片 -->
+                    <div id="vocab-card" class="card-flip absolute w-full h-full">
+                        <!-- 卡片正面 -->
+                        <div id="card-front" class="card-front absolute w-full h-full bg-white rounded-2xl card-shadow p-6 md:p-8 flex flex-col justify-center items-center text-center transition-all">
+                            <div class="mb-4 text-primary/70">
+                                <i class="fa fa-question-circle text-4xl"></i>
+                            </div>
+                            <h3 id="question-text" class="text-xl md:text-2xl font-semibold mb-6 px-2">点击卡片开始测试</h3>
+                            <p class="text-neutral text-sm">环境科学托福词汇</p>
+                        </div>
+                        
+                        <!-- 卡片背面 -->
+                        <div id="card-back" class="card-back absolute w-full h-full bg-white rounded-2xl card-shadow p-6 md:p-8 flex flex-col justify-center items-center text-center transition-all">
+                            <div class="mb-4 text-secondary/70">
+                                <i class="fa fa-answer text-4xl"></i>
+                            </div>
+                            <h3 id="answer-text" class="text-xl md:text-2xl font-semibold mb-6 px-2">答案将在这里显示</h3>
+                            <p class="text-neutral text-sm">点击返回</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 选项区域 -->
+                <div id="options-container" class="mt-8 space-y-3 hidden">
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="option-btn px-6 py-3 rounded-xl bg-light hover:bg-gray-200 transition-all text-left font-medium" data-index="0"></button>
+                        <button class="option-btn px-6 py-3 rounded-xl bg-light hover:bg-gray-200 transition-all text-left font-medium" data-index="1"></button>
+                        <button class="option-btn px-6 py-3 rounded-xl bg-light hover:bg-gray-200 transition-all text-left font-medium" data-index="2"></button>
+                        <button class="option-btn px-6 py-3 rounded-xl bg-light hover:bg-gray-200 transition-all text-left font-medium" data-index="3"></button>
+                    </div>
+                </div>
+                
+                <!-- 学习模式导航 -->
+                <div id="study-navigation" class="mt-8 flex justify-between items-center hidden">
+                    <button id="prev-word" class="px-4 py-2 rounded-lg bg-light hover:bg-gray-200 transition-all flex items-center">
+                        <i class="fa fa-chevron-left mr-2"></i> 上一个
+                    </button>
+                    <span id="study-progress" class="text-neutral">1/10</span>
+                    <button id="next-word" class="px-4 py-2 rounded-lg bg-light hover:bg-gray-200 transition-all flex items-center">
+                        下一个 <i class="fa fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 结果面板 -->
+            <div class="w-full md:w-1/4">
+                <div id="results-panel" class="bg-white rounded-xl p-5 shadow-sm hidden">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fa fa-bar-chart text-primary mr-2"></i>测试结果
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <div class="text-center mb-2">
+                            <span class="text-neutral text-sm">最终得分</span>
+                        </div>
+                        <div class="text-center">
+                            <span id="final-score" class="text-4xl font-bold text-primary">0</span>
+                            <span class="text-xl text-neutral ml-1">/10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-neutral">正确率</span>
+                                <span id="result-accuracy" class="font-medium">0%</span>
+                            </div>
+                            <div class="bg-light rounded-full h-2 overflow-hidden">
+                                <div id="accuracy-bar" class="bg-secondary h-full w-0"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3 text-center">
+                            <div class="bg-green-50 rounded-lg p-3">
+                                <div class="text-secondary font-bold text-xl" id="correct-count">0</div>
+                                <div class="text-xs text-neutral mt-1">正确</div>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-3">
+                                <div class="text-danger font-bold text-xl" id="wrong-count">0</div>
+                                <div class="text-xs text-neutral mt-1">错误</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="review-mistakes" class="w-full mt-6 py-2.5 rounded-lg bg-accent/10 text-accent hover:bg-accent/20 transition-colors text-sm font-medium hidden">
+                        查看错误词汇
+                    </button>
+                    
+                    <button id="new-test" class="w-full mt-4 py-2.5 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors text-sm font-medium">
+                        开始新测试
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-16 py-6 bg-white/80 backdrop-blur-md">
+        <div class="container mx-auto px-4 text-center text-neutral text-sm">
+            <p>托福环境科学词汇测试 &copy; 2023 | 为高中英语学习设计</p>
+        </div>
+    </footer>
+
+    <script>
+        // 100个托福环境科学类词汇和短语
+        const vocabularyList = [
+            { word: "sustainability", definition: "可持续性，指能够长期维持的状态或实践" },
+            { word: "biodiversity", definition: "生物多样性，指地球上所有生物的多样性" },
+            { word: "ecosystem", definition: "生态系统，生物群落与其环境形成的功能整体" },
+            { word: "conservation", definition: "保护，指对自然资源的保护和合理利用" },
+            { word: "pollution", definition: "污染，指环境中引入有害物质或能量" },
+            { word: "renewable energy", definition: "可再生能源，指可以不断再生的能源" },
+            { word: "climate change", definition: "气候变化，指长期气候模式的改变" },
+            { word: "deforestation", definition: "森林砍伐，指大面积森林被砍伐的过程" },
+            { word: "desertification", definition: "沙漠化，指土地变成沙漠的过程" },
+            { word: "emission", definition: "排放，指释放污染物到环境中" },
+            { word: "endangered species", definition: "濒危物种，指面临灭绝危险的物种" },
+            { word: "fossil fuels", definition: "化石燃料，如煤、石油和天然气等" },
+            { word: "global warming", definition: "全球变暖，指地球平均温度上升的现象" },
+            { word: "greenhouse effect", definition: "温室效应，大气保温的自然过程" },
+            { word: "habitat", definition: "栖息地，生物生活的自然环境" },
+            { word: "invasive species", definition: "入侵物种，指非本地的有害物种" },
+            { word: "landfill", definition: "垃圾填埋场，用于处置固体废物的场地" },
+            { word: "melting ice caps", definition: "冰盖融化，指极地冰盖的消融" },
+            { word: "ozone layer", definition: "臭氧层，大气中保护地球的臭氧区域" },
+            { word: "recycling", definition: "回收利用，将废物转化为可再用材料的过程" },
+            { word: "soil erosion", definition: "土壤侵蚀，指土壤被水或风带走的过程" },
+            { word: "solar energy", definition: "太阳能，来自太阳的能量" },
+            { word: "water conservation", definition: "水资源保护，合理利用和保护水资源" },
+            { word: "wind power", definition: "风能，利用风力产生的能源" },
+            { word: "carbon footprint", definition: "碳足迹，指个人或组织的碳排放总量" },
+            { word: "composting", definition: "堆肥，将有机废物转化为肥料的过程" },
+            { word: "degradation", definition: "退化，指环境质量下降的过程" },
+            { word: "environmental impact", definition: "环境影响，人类活动对环境的作用" },
+            { word: "extinction", definition: "灭绝，指物种永久消失的过程" },
+            { word: "geothermal energy", definition: "地热能，来自地球内部的热能" },
+            { word: "hydroelectric power", definition: "水力发电，利用水流产生的电力" },
+            { word: "natural resources", definition: "自然资源，自然界中可利用的物质" },
+            { word: "overfishing", definition: "过度捕捞，指捕鱼量超过可持续水平" },
+            { word: "pesticide", definition: "杀虫剂，用于杀死害虫的化学物质" },
+            { word: "renewable resources", definition: "可再生资源，能够自然再生的资源" },
+            { word: "soil contamination", definition: "土壤污染，指土壤中存在有害物质" },
+            { word: "sustainable development", definition: "可持续发展，满足当代需求又不损害后代的发展" },
+            { word: "urbanization", definition: "城市化，人口向城市集中的过程" },
+            { word: "waste management", definition: "废物管理，对废物的收集、处理和处置" },
+            { word: "wildlife preservation", definition: "野生动物保护，保护野生动物及其栖息地" },
+            { word: "acid rain", definition: "酸雨，含有酸性物质的降水" },
+            { word: "biodegradable", definition: "可生物降解的，能够被生物分解的物质" },
+            { word: "carbon dioxide", definition: "二氧化碳，一种温室气体" },
+            { word: "decomposition", definition: "分解，有机物质被分解为简单物质的过程" },
+            { word: "ecological balance", definition: "生态平衡，生态系统中各要素的平衡状态" },
+            { word: "environmental protection", definition: "环境保护，保护自然环境的行为" },
+            { word: "flooding", definition: "洪水，大量水体淹没土地的现象" },
+            { word: "genetic diversity", definition: "遗传多样性，物种内部基因的多样性" },
+            { word: "habitat destruction", definition: "栖息地破坏，指生物栖息地被破坏的过程" },
+            { word: "industrial waste", definition: "工业废物，工业生产过程中产生的废物" },
+            { word: "methane", definition: "甲烷，一种强效温室气体" },
+            { word: "natural selection", definition: "自然选择，生物进化的主要机制" },
+            { word: "non-renewable resources", definition: "不可再生资源，不能在短时间内再生的资源" },
+            { word: "nuclear energy", definition: "核能，利用核反应产生的能量" },
+            { word: "ocean acidification", definition: "海洋酸化，海水酸度增加的现象" },
+            { word: "organic farming", definition: "有机农业，不使用合成化学品的农业方式" },
+            { word: "photosynthesis", definition: "光合作用，植物利用阳光制造能量的过程" },
+            { word: "plastic pollution", definition: "塑料污染，塑料制品对环境的污染" },
+            { word: "renewable energy sources", definition: "可再生能源，如太阳能、风能等" },
+            { word: "soil fertility", definition: "土壤肥力，土壤支持植物生长的能力" },
+            { word: "solar panel", definition: "太阳能电池板，将太阳能转化为电能的装置" },
+            { word: "water pollution", definition: "水污染，水体中存在有害物质的状态" },
+            { word: "wetlands", definition: "湿地，水位接近或覆盖地表的区域" },
+            { word: "carbon sequestration", definition: "碳封存，将二氧化碳储存起来的过程" },
+            { word: "deforestation rate", definition: "森林砍伐率，森林被砍伐的速度" },
+            { word: "ecological footprint", definition: "生态足迹，衡量人类对地球资源的需求" },
+            { word: "endemism", definition: "特有现象，物种仅存在于特定地区的现象" },
+            { word: "fossil fuel combustion", definition: "化石燃料燃烧，化石燃料被燃烧的过程" },
+            { word: "green technology", definition: "绿色技术，对环境友好的技术" },
+            { word: "groundwater depletion", definition: "地下水枯竭，地下水资源减少的现象" },
+            { word: "habitat fragmentation", definition: "栖息地破碎化，栖息地被分割的过程" },
+            { word: "insecticide", definition: "杀虫剂，用于杀死昆虫的化学物质" },
+            { word: "land degradation", definition: "土地退化，土地质量下降的过程" },
+            { word: "methane emissions", definition: "甲烷排放，甲烷释放到大气中的过程" },
+            { word: "natural disaster", definition: "自然灾害，自然发生的灾害事件" },
+            { word: "oil spill", definition: "石油泄漏，石油意外泄漏到环境中的事件" },
+            { word: "ozone depletion", definition: "臭氧层损耗，臭氧层变薄的现象" },
+            { word: "permaculture", definition: "永久农业，可持续的农业系统设计" },
+            { word: "radioactive waste", definition: "放射性废物，含有放射性物质的废物" },
+            { word: "resource depletion", definition: "资源枯竭，自然资源减少的过程" },
+            { word: "soil conservation", definition: "土壤保持，防止土壤侵蚀和退化的措施" },
+            { word: "solar radiation", definition: "太阳辐射，来自太阳的能量辐射" },
+            { word: "water scarcity", definition: "水资源短缺，可用水资源不足的状况" },
+            { word: "wind turbine", definition: "风力涡轮机，将风能转化为电能的装置" },
+            { word: "air pollution", definition: "空气污染，大气中存在有害物质的状态" },
+            { word: "biofuel", definition: "生物燃料，来自生物质的燃料" },
+            { word: "carbon cycle", definition: "碳循环，碳在环境中循环的过程" },
+            { word: "deforestation effect", definition: "森林砍伐效应，森林砍伐对环境的影响" },
+            { word: "ecologist", definition: "生态学家，研究生态学的科学家" },
+            { word: "environmental policy", definition: "环境政策，关于环境保护的政策" },
+            { word: "food chain", definition: "食物链，生态系统中能量传递的链条" },
+            { word: "geosphere", definition: "地圈，地球的固体部分" },
+            { word: "habitat restoration", definition: "栖息地恢复，修复受损栖息地的过程" },
+            { word: "irrigation", definition: "灌溉，为农作物提供水的过程" },
+            { word: "land use", definition: "土地利用，人类对土地的使用方式" },
+            { word: "microplastic", definition: "微塑料，微小的塑料颗粒" },
+            { word: "natural habitat", definition: "自然栖息地，生物自然生活的环境" },
+            { word: "nutrient cycle", definition: "营养循环，生态系统中营养物质的循环" },
+            { word: "overpopulation", definition: "人口过剩，人口数量超过环境承载能力" },
+            { word: "oxygen cycle", definition: "氧循环，氧气在环境中循环的过程" },
+            { word: "polution control", definition: "污染控制，减少或防止污染的措施" },
+            { word: "renewable portfolio standard", definition: "可再生能源组合标准，规定可再生能源比例的标准" },
+            { word: "soil management", definition: "土壤管理，对土壤进行保护和改良的措施" },
+            { word: "solar thermal energy", definition: "太阳能热利用，利用太阳能产生热量" },
+            { word: "water cycle", definition: "水循环，水在地球上循环的过程" },
+            { word: "wildlife corridor", definition: "野生动物走廊，连接不同栖息地的通道" }
+        ];
+
+        // 应用状态
+        const appState = {
+            isTesting: true,
+            currentTestWords: [],
+            currentIndex: 0,
+            correctAnswers: 0,
+            wrongAnswers: 0,
+            mistakes: []
+        };
+
+        // DOM 元素
+        const elements = {
+            card: document.getElementById('vocab-card'),
+            cardFront: document.getElementById('card-front'),
+            cardBack: document.getElementById('card-back'),
+            questionText: document.getElementById('question-text'),
+            answerText: document.getElementById('answer-text'),
+            optionsContainer: document.getElementById('options-container'),
+            optionButtons: document.querySelectorAll('.option-btn'),
+            progressBar: document.getElementById('progress-bar'),
+            completedCount: document.getElementById('completed-count'),
+            accuracyRate: document.getElementById('accuracy-rate'),
+            resultsPanel: document.getElementById('results-panel'),
+            finalScore: document.getElementById('final-score'),
+            resultAccuracy: document.getElementById('result-accuracy'),
+            accuracyBar: document.getElementById('accuracy-bar'),
+            correctCount: document.getElementById('correct-count'),
+            wrongCount: document.getElementById('wrong-count'),
+            reviewMistakes: document.getElementById('review-mistakes'),
+            newTest: document.getElementById('new-test'),
+            restartBtn: document.getElementById('restart-btn'),
+            modeToggle: document.getElementById('mode-toggle'),
+            studyNavigation: document.getElementById('study-navigation'),
+            studyProgress: document.getElementById('study-progress'),
+            prevWord: document.getElementById('prev-word'),
+            nextWord: document.getElementById('next-word')
+        };
+
+        // 随机选择10个单词
+        function selectRandomWords() {
+            const shuffled = [...vocabularyList].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, 10);
+        }
+
+        // 生成选项
+        function generateOptions(correctAnswer, allWords) {
+            // 收集错误选项
+            const wrongOptions = allWords
+                .filter(word => word.definition !== correctAnswer.definition)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 3)
+                .map(word => word.definition);
+            
+            // 组合所有选项并打乱顺序
+            const options = [correctAnswer.definition, ...wrongOptions]
+                .sort(() => 0.5 - Math.random());
+            
+            return options;
+        }
+
+        // 更新卡片显示
+        function updateCard() {
+            if (appState.currentIndex >= appState.currentTestWords.length) {
+                showResults();
+                return;
+            }
+
+            const currentWord = appState.currentTestWords[appState.currentIndex];
+            
+            // 重置卡片状态
+            elements.card.classList.remove('card-flip-active');
+            
+            if (appState.isTesting) {
+                // 测试模式：显示单词，选项为释义
+                elements.questionText.textContent = currentWord.word;
+                elements.answerText.textContent = currentWord.definition;
+                
+                // 生成选项
+                const options = generateOptions(currentWord, vocabularyList);
+                
+                // 更新选项按钮
+                elements.optionButtons.forEach((btn, index) => {
+                    btn.textContent = options[index];
+                    btn.classList.remove('bg-secondary/20', 'bg-danger/20', 'text-secondary', 'text-danger');
+                    btn.classList.add('bg-light', 'hover:bg-gray-200');
+                    btn.disabled = false;
+                });
+                
+                elements.optionsContainer.classList.remove('hidden');
+                elements.studyNavigation.classList.add('hidden');
+            } else {
+                // 学习模式：正面显示单词，背面显示释义
+                elements.questionText.textContent = currentWord.word;
+                elements.answerText.textContent = currentWord.definition;
+                
+                elements.optionsContainer.classList.add('hidden');
+                elements.studyNavigation.classList.remove('hidden');
+                elements.studyProgress.textContent = `${appState.currentIndex + 1}/${appState.currentTestWords.length}`;
+            }
+            
+            // 更新进度
+            updateProgress();
+        }
+
+        // 更新进度条和统计
+        function updateProgress() {
+            const progress = (appState.currentIndex / appState.currentTestWords.length) * 100;
+            elements.progressBar.style.width = `${progress}%`;
+            
+            const totalAnswered = appState.correctAnswers + appState.wrongAnswers;
+            elements.completedCount.textContent = `${totalAnswered}/${appState.currentTestWords.length}`;
+            
+            const accuracy = totalAnswered > 0 
+                ? Math.round((appState.correctAnswers / totalAnswered) * 100) 
+                : 0;
+            elements.accuracyRate.textContent = `${accuracy}%`;
+        }
+
+        // 检查答案
+        function checkAnswer(selectedIndex) {
+            const currentWord = appState.currentTestWords[appState.currentIndex];
+            const selectedOption = elements.optionButtons[selectedIndex].textContent;
+            
+            // 禁用所有选项
+            elements.optionButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-gray-200');
+            });
+            
+            // 标记正确和错误选项
+            elements.optionButtons.forEach((btn, index) => {
+                if (btn.textContent === currentWord.definition) {
+                    btn.classList.remove('bg-light');
+                    btn.classList.add('bg-secondary/20', 'text-secondary');
+                } else if (index === selectedIndex) {
+                    btn.classList.remove('bg-light');
+                    btn.classList.add('bg-danger/20', 'text-danger');
+                }
+            });
+            
+            // 记录结果
+            if (selectedOption === currentWord.definition) {
+                appState.correctAnswers++;
+            } else {
+                appState.wrongAnswers++;
+                appState.mistakes.push(currentWord);
+            }
+            
+            // 延迟进入下一题
+            setTimeout(() => {
+                appState.currentIndex++;
+                updateCard();
+            }, 1500);
+        }
+
+        // 显示结果
+        function showResults() {
+            const total = appState.currentTestWords.length;
+            const accuracy = Math.round((appState.correctAnswers / total) * 100);
+            
+            elements.finalScore.textContent = appState.correctAnswers;
+            elements.resultAccuracy.textContent = `${accuracy}%`;
+            elements.accuracyBar.style.width = `${accuracy}%`;
+            elements.correctCount.textContent = appState.correctAnswers;
+            elements.wrongCount.textContent = appState.wrongAnswers;
+            
+            elements.resultsPanel.classList.remove('hidden');
+            
+            // 如果有错误，显示查看错误按钮
+            if (appState.mistakes.length > 0) {
+                elements.reviewMistakes.classList.remove('hidden');
+            } else {
+                elements.reviewMistakes.classList.add('hidden');
+            }
+        }
+
+        // 开始新测试
+        function startNewTest() {
+            appState.currentTestWords = selectRandomWords();
+            appState.currentIndex = 0;
+            appState.correctAnswers = 0;
+            appState.wrongAnswers = 0;
+            appState.mistakes = [];
+            
+            elements.resultsPanel.classList.add('hidden');
+            updateCard();
+        }
+
+        // 切换模式（测试/学习）
+        function toggleMode() {
+            appState.isTesting = !appState.isTesting;
+            
+            if (appState.isTesting) {
+                elements.modeToggle.innerHTML = '<i class="fa fa-book text-neutral"></i><span class="text-sm">学习模式</span>';
+                elements.modeToggle.classList.remove('bg-accent/10', 'text-accent');
+                elements.modeToggle.classList.add('bg-light', 'text-neutral');
+            } else {
+                elements.modeToggle.innerHTML = '<i class="fa fa-check-square-o text-accent"></i><span class="text-sm">测试模式</span>';
+                elements.modeToggle.classList.remove('bg-light', 'text-neutral');
+                elements.modeToggle.classList.add('bg-accent/10', 'text-accent');
+            }
+            
+            updateCard();
+        }
+
+        // 查看错误词汇
+        function reviewMistakes() {
+            appState.currentTestWords = appState.mistakes;
+            appState.currentIndex = 0;
+            appState.isTesting = false;
+            
+            elements.modeToggle.innerHTML = '<i class="fa fa-check-square-o text-accent"></i><span class="text-sm">测试模式</span>';
+            elements.modeToggle.classList.remove('bg-light', 'text-neutral');
+            elements.modeToggle.classList.add('bg-accent/10', 'text-accent');
+            
+            elements.resultsPanel.classList.add('hidden');
+            updateCard();
+        }
+
+        // 事件监听
+        elements.card.addEventListener('click', () => {
+            elements.card.classList.toggle('card-flip-active');
+        });
+
+        elements.optionButtons.forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                if (appState.isTesting) {
+                    checkAnswer(index);
+                }
+            });
+        });
+
+        elements.newTest.addEventListener('click', startNewTest);
+        elements.restartBtn.addEventListener('click', startNewTest);
+        elements.modeToggle.addEventListener('click', toggleMode);
+        elements.reviewMistakes.addEventListener('click', reviewMistakes);
+
+        elements.prevWord.addEventListener('click', () => {
+            if (appState.currentIndex > 0) {
+                appState.currentIndex--;
+                updateCard();
+            }
+        });
+
+        elements.nextWord.addEventListener('click', () => {
+            if (appState.currentIndex < appState.currentTestWords.length - 1) {
+                appState.currentIndex++;
+                updateCard();
+            }
+        });
+
+        // 初始化应用
+        startNewTest();
+    </script>
+</body>
+</html>
